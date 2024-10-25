@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Archived Submissions</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            padding: 20px;
+        }
+        h1 {
+            text-align: center;
+        }
+        .submissions-container {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 20px;
+            margin-top: 20px;
+        }
+        @media (max-width: 768px) {
+            .submissions-container {
+                grid-template-columns: 1fr; /* One column on mobile devices */
+            }
+        }
+        .submission-card {
+            background-color: #fff;
+            border: 1px solid #ddd;
+            padding: 15px;
+            border-radius: 5px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        .archive-link {
+            display: block;
+            text-align: center;
+            margin: 20px 0;
+        }
+        .archive-link a {
+            background-color: #008CBA;
+            color: white;
+            padding: 10px 20px;
+            text-decoration: none;
+            border-radius: 5px;
+        }
+        .archive-link a:hover {
+            background-color: #007B9E;
+        }
+        button {
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        p {
+            margin: 8px 0;
+        }
+        .search-bar {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 20px;
+            font-size: 16px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Archived Submissions</h1>
+
+    <!-- Button to navigate back to the Index page -->
+    <div class="archive-link">
+        <a href="index.html">Back to Submissions</a>
+    </div>
+
+    <!-- Search Bar -->
+    <input type="text" id="search" class="search-bar" placeholder="Search by name, email, or message..." />
+
+    <!-- Container for archived submissions -->
+    <div id="archived-submissions" class="submissions-container"></div>
+
+    <script>
+        let archivedSubmissions = [];
+
+        async function fetchArchivedSubmissions() {
+            try {
+                const response = await fetch('archived.json');
+                if (!response.ok) {
+                    throw new Error('Failed to fetch archived submissions.');
+                }
+                archivedSubmissions = await response.json();
+
+                // Check if the response is a valid array
+                if (!Array.isArray(archivedSubmissions)) {
+                    throw new Error('Invalid data format.');
+                }
+
+                // Sort the submissions by submissionDate in descending order (latest to oldest)
+                archivedSubmissions.sort((a, b) => new Date(b.submissionDate) - new Date(a.submissionDate));
+
+                displayArchivedSubmissions(archivedSubmissions);
+            } catch (error) {
+                console.error('Error fetching archived submissions:', error);
+                document.getElementById('archived-submissions').innerHTML = '<p>Error loading archived submissions.</p>';
+            }
+        }
+
+        function displayArchivedSubmissions(submissions) {
+            const archiveContainer = document.getElementById('archived-submissions');
+            archiveContainer.innerHTML = ''; // Clear previous entries
+
+            // Check if there are archived submissions
+            if (!Array.isArray(submissions) || submissions.length === 0) {
+                archiveContainer.innerHTML = '<p>No archived submissions available.</p>';
+                return;
+            }
+
+            // Loop through archived submissions and display them (latest first)
+            submissions.forEach(submission => {
+                const submissionDiv = document.createElement('div');
+                submissionDiv.classList.add('submission-card');
+                submissionDiv.innerHTML = `
+                    <h3>${submission.name} (${submission.subject || 'No subject'})</h3>
+                    <p><strong>Email:</strong> ${submission.email}</p>
+                    <p><strong>Phone:</strong> ${submission.phone}</p>
+                    <p><strong>Device:</strong> ${submission.subject}</p>
+                    <p><strong>Message:</strong> ${submission.message}</p>
+                    <p><strong>Submission Date:</strong> ${submission.submissionDate}</p>
+                    <p><strong>Notes:</strong> ${submission.notes || 'No notes added.'}</p>
+                `;
+
+                // Prepend new submissions to show the latest ones at the top
+                archiveContainer.prepend(submissionDiv);
+            });
+        }
+
+        // Add search functionality
+        document.getElementById('search').addEventListener('input', function (e) {
+            const searchTerm = e.target.value.toLowerCase();
+
+            // Filter archived submissions based on the search term
+            const filteredSubmissions = archivedSubmissions.filter(submission =>
+                submission.name.toLowerCase().includes(searchTerm) ||
+                submission.email.toLowerCase().includes(searchTerm) ||
+                submission.message.toLowerCase().includes(searchTerm)
+            );
+
+            // Re-display the filtered submissions
+            displayArchivedSubmissions(filteredSubmissions);
+        });
+
+        // Fetch archived submissions when the page loads
+        fetchArchivedSubmissions();
+    </script>
+</body>
+</html>
