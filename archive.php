@@ -42,7 +42,15 @@ if (!file_exists($archivedFile)) {
     file_put_contents($archivedFile, json_encode([], JSON_PRETTY_PRINT)); // Create the file if it doesn't exist
 }
 $existingArchives = json_decode(file_get_contents($archivedFile), true);
-$existingArchives = array_merge($existingArchives, $archivedSubmissions);
+
+// Ensure no duplicate entries in the archive
+$existingArchivedIds = array_column($existingArchives, 'id');
+foreach ($archivedSubmissions as $archivedSubmission) {
+    if (!in_array($archivedSubmission['id'], $existingArchivedIds)) {
+        array_unshift($existingArchives, $archivedSubmission); // Add new archived submissions to the beginning for proper ordering
+    }
+}
+
 file_put_contents($archivedFile, json_encode($existingArchives, JSON_PRETTY_PRINT));
 
 // Return success response
